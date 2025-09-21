@@ -47,96 +47,42 @@
 **软件依赖**:
 - Docker 20.10+
 - Docker Compose 1.29+
-- Git（可选）
+- Git
 
-### 一、准备VPS环境
+### 🚀 一键部署（推荐）
 
-#### 1.1 连接到VPS
+#### 方法1: GitHub克隆部署
 ```bash
+# 1. 连接到VPS
 ssh 用户名@您的VPS-IP
-```
 
-#### 1.2 更新系统并安装必要工具
-```bash
-# Ubuntu/Debian
-sudo apt update && sudo apt upgrade -y
-sudo apt install -y curl wget git unzip
-
-# CentOS/RHEL
-sudo yum update -y
-sudo yum install -y curl wget git unzip
-```
-
-#### 1.3 安装Docker
-```bash
-# 下载并运行Docker安装脚本
+# 2. 安装Docker（如果未安装）
 curl -fsSL https://get.docker.com -o get-docker.sh
 sudo sh get-docker.sh
-
-# 将用户添加到docker组
 sudo usermod -aG docker $USER
 
-# 清理安装脚本
-rm get-docker.sh
-```
-
-#### 1.4 安装Docker Compose
-```bash
+# 3. 安装Docker Compose
 sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
 sudo chmod +x /usr/local/bin/docker-compose
-```
 
-#### 1.5 启动Docker服务
-```bash
-sudo systemctl start docker
-sudo systemctl enable docker
+# 4. 重新登录VPS
+exit && ssh 用户名@您的VPS-IP
 
-# 验证安装
-docker --version
-docker-compose --version
-```
-
-**⚠️ 重要**: 重新登录VPS让用户组权限生效
-```bash
-exit
-ssh 用户名@您的VPS-IP
-```
-
-### 二、部署应用
-
-#### 2.1 上传代码（选择其中一种方式）
-
-**方式A: SCP上传（推荐）**
-```bash
-# 在本地执行
-scp -r ./dify工作展示/* 用户名@VPS-IP:/tmp/dify-showcase/
-
-# 在VPS执行
-sudo mkdir -p /opt/dify-showcase
-sudo mv /tmp/dify-showcase/* /opt/dify-showcase/
-sudo chown -R $USER:$USER /opt/dify-showcase
-```
-
-**方式B: Git克隆**
-```bash
+# 5. 克隆项目并部署
 cd /opt
-sudo mkdir -p dify-showcase
-sudo chown -R $USER:$USER dify-showcase
-git clone https://github.com/您的用户名/项目名.git dify-showcase
-```
-
-#### 2.2 执行部署
-```bash
-cd /opt/dify-showcase
-
-# 设置执行权限
-chmod +x deploy.sh update.sh update-config.sh
-
-# 运行部署脚本
+git clone https://github.com/allanliyingpeng/chatflow.git dify-showcase
+cd dify-showcase
+chmod +x deploy.sh update.sh update-config.sh vps-fix.sh
 ./deploy.sh
 ```
 
-#### 2.3 配置防火墙
+#### 方法2: 故障排除部署（遇到问题时使用）
+```bash
+cd /opt/dify-showcase
+./vps-fix.sh
+```
+
+### 🔧 防火墙配置
 ```bash
 # Ubuntu/Debian
 sudo ufw allow 22    # SSH
@@ -149,31 +95,13 @@ sudo firewall-cmd --permanent --add-service=ssh
 sudo firewall-cmd --reload
 ```
 
-#### 2.4 验证部署
-```bash
-# 检查容器状态
-docker-compose ps
-
-# 查看日志
-docker-compose logs -f
-
-# 测试访问
-curl http://localhost:3000
-```
-
 **🌐 访问地址**: `http://您的VPS-IP:3000`
 
-### 三、生产环境部署（使用Nginx）
-
-如果需要使用标准的80端口和更好的性能：
+### 🏭 生产环境部署（使用Nginx）
 
 ```bash
 cd /opt/dify-showcase
-
-# 停止开发环境
 docker-compose down
-
-# 启动生产环境
 docker-compose -f docker-compose.prod.yml up -d
 
 # 配置防火墙
@@ -181,15 +109,13 @@ sudo ufw allow 80
 sudo ufw allow 443
 ```
 
-**🌐 访问地址**: `http://您的VPS-IP` (无需端口号)
+**🌐 访问地址**: `http://您的VPS-IP` (标准80端口)
 
 ## 🔄 网站更新方法
 
-### 快速更新脚本
+### 🎯 GitHub方式更新（推荐）
 
-项目提供了多种更新方式，根据修改内容选择合适的方法：
-
-#### 方法1: 智能更新脚本（推荐）
+#### 方法1: 智能更新脚本
 ```bash
 cd /opt/dify-showcase
 ./update.sh
@@ -197,87 +123,62 @@ cd /opt/dify-showcase
 
 选择更新类型：
 - `1` - 仅重启容器（配置已手动更新）
-- `2` - Git拉取 + 重启（推荐）
+- `2` - Git拉取 + 重启（**推荐**）
 - `3` - Git拉取 + 重新构建
 - `4` - 完整重新部署
 
-#### 方法2: 配置文件快速更新
+#### 方法2: 直接Git更新
 ```bash
-# 直接编辑配置
+cd /opt/dify-showcase
+git pull origin main
+docker-compose restart
+```
+
+#### 方法3: 配置文件快速更新
+```bash
+# 在VPS上直接编辑配置
 ./update-config.sh
 
 # 或指定新配置文件
 ./update-config.sh /path/to/new/workflows.ts
 ```
 
-#### 方法3: 一行命令更新
+### 📝 本地开发 → VPS部署流程
+
+#### 1. 本地修改代码
+```bash
+# 修改工作流配置或其他文件
+nano src/lib/workflows.ts
+
+# 提交到GitHub
+git add .
+git commit -m "更新工作流配置"
+git push origin main
+```
+
+#### 2. VPS自动更新
+```bash
+# 在VPS上拉取最新代码
+cd /opt/dify-showcase
+git pull origin main
+docker-compose restart
+```
+
+### ⚡ 一行命令更新
 
 **最快速（仅重启）**:
 ```bash
 docker-compose restart
 ```
 
-**中等速度（拉取代码+重启）**:
+**标准更新（Git + 重启）**:
 ```bash
 git pull origin main && docker-compose restart
 ```
 
-**完整重构**:
+**完整重构（适用于依赖更新）**:
 ```bash
-docker-compose up -d --build
-```
-
-### 更新流程详解
-
-#### 📝 修改工作流配置
-
-1. **本地修改**
-   ```bash
-   # 编辑 src/lib/workflows.ts 文件
-   nano src/lib/workflows.ts
-   ```
-
-2. **上传到VPS**
-   ```bash
-   scp src/lib/workflows.ts user@vps:/opt/dify-showcase/src/lib/
-   ```
-
-3. **应用更新**
-   ```bash
-   cd /opt/dify-showcase
-   docker-compose restart
-   ```
-
-#### 🔧 修改其他代码文件
-
-1. **使用Git方式**
-   ```bash
-   # 本地提交
-   git add .
-   git commit -m "更新描述"
-   git push origin main
-
-   # VPS更新
-   cd /opt/dify-showcase
-   git pull origin main
-   docker-compose restart
-   ```
-
-2. **使用文件上传**
-   ```bash
-   # 批量上传文件
-   rsync -av --exclude node_modules --exclude .git ./src/ user@vps:/opt/dify-showcase/src/
-
-   # 重启服务
-   docker-compose restart
-   ```
-
-#### 🏗️ 添加新依赖或大版本更新
-
-```bash
-cd /opt/dify-showcase
-git pull origin main  # 如果使用Git
-docker-compose up -d --build  # 重新构建镜像
+git pull origin main && docker-compose up -d --build
 ```
 
 ## ⚙️ 工作流配置
@@ -406,15 +307,23 @@ sudo firewall-cmd --reload
 │   │   └── workflows.ts   # 工作流配置 ⭐
 │   └── types/             # TypeScript 类型定义
 │       └── workflow.ts
+├── public/                # 静态文件目录 🆕
+│   └── .gitkeep          # 确保目录存在
 ├── deploy.sh              # 一键部署脚本 ⭐
 ├── update.sh              # 智能更新脚本 ⭐
 ├── update-config.sh       # 配置更新脚本 ⭐
+├── vps-fix.sh            # 故障排除脚本 🆕
 ├── docker-compose.yml     # 基础Docker配置
 ├── docker-compose.prod.yml # 生产环境配置
-├── Dockerfile            # Docker构建文件
+├── Dockerfile            # Docker构建文件（已修复）
 ├── nginx.prod.conf       # Nginx配置
 └── README.md             # 本文档
 ```
+
+### 🆕 新增文件说明
+- **`public/.gitkeep`** - 确保静态文件目录存在，解决Docker构建问题
+- **`vps-fix.sh`** - VPS部署故障自动排除脚本
+- **`Dockerfile`** - 修复了public目录缺失的构建问题
 
 ## 🛠️ 开发指南
 
@@ -461,7 +370,19 @@ npm run type-check   # 类型检查
    - 新标签页模式：在新标签页中打开工作流
 4. **主题切换**: 使用右上角的主题切换按钮
 
-## 🚨 常见问题
+## 📦 GitHub仓库信息
+
+- **仓库地址**: https://github.com/allanliyingpeng/chatflow.git
+- **主分支**: main
+- **克隆命令**: `git clone https://github.com/allanliyingpeng/chatflow.git`
+
+## 🚨 常见问题与解决
+
+### Q: Docker构建失败 "public: not found"
+```bash
+cd /opt/dify-showcase
+./vps-fix.sh  # 自动修复脚本
+```
 
 ### Q: 端口被占用怎么办？
 ```bash
@@ -469,15 +390,21 @@ sudo netstat -tlnp | grep :3000
 sudo kill -9 PID
 ```
 
-### Q: 权限问题怎么解决？
+### Q: Git拉取失败？
 ```bash
-sudo chown -R $USER:$USER /opt/dify-showcase
+cd /opt/dify-showcase
+git stash  # 暂存本地修改
+git pull origin main
+git stash pop  # 恢复本地修改（可选）
 ```
 
 ### Q: 服务启动失败？
 ```bash
 # 查看详细日志
 docker-compose logs
+
+# 使用故障排除脚本
+./vps-fix.sh
 
 # 检查防火墙
 sudo ufw status
@@ -489,7 +416,7 @@ sudo ufw status
 cp src/lib/workflows.ts ~/workflows-backup.ts
 
 # 完整备份
-tar -czf backup.tar.gz /opt/dify-showcase
+tar -czf backup-$(date +%Y%m%d).tar.gz /opt/dify-showcase
 ```
 
 ## 🎯 性能优化
