@@ -5,7 +5,7 @@ export const workflows: WorkflowConfig[] = [
     id: 'vps-knowledge',
     title: 'VPS知识库',
     description: '记录常用的脚本和密码，VPS管理相关的知识库助手',
-    difyUrl: 'http://dify.sop.design/chatbot/5xviFcRKCkWM1EWD',
+    difyUrl: 'https://dify.sop.design/chatbot/5xviFcRKCkWM1EWD',
     category: 'assistant',
     tags: ['VPS', '密码', '脚本'],
     openMode: 'modal'

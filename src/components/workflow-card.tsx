@@ -97,9 +97,10 @@ export function WorkflowCard({ workflow }: WorkflowCardProps) {
                 src={workflow.difyUrl}
                 className="w-full h-full rounded-lg"
                 style={{ minHeight: '500px' }}
-                sandbox="allow-same-origin allow-scripts allow-forms allow-popups"
+                sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-top-navigation"
                 loading="lazy"
                 title={workflow.title}
+                referrerPolicy="strict-origin-when-cross-origin"
               />
             </div>
           </div>
